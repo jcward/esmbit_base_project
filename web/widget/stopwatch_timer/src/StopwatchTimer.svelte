@@ -8,7 +8,7 @@
 
   function is_running() { return !Number.isNaN(timer); }
 
-  function start() {
+  export function start() {
     if (is_running()) return;
     t0 = (new Date().getTime()) - display_time;
     timer = setInterval(() => {
@@ -16,13 +16,13 @@
     }, 73);
   }
 
-  function stop() {
+  export function stop() {
     if (!is_running()) return;
     clearInterval(timer);
     timer = NaN;
   }
 
-  function reset() { // resets to 0, but doesn't change the state of running
+  export function reset() { // resets to 0, but doesn't change the state of running
     display_time = 0;
     t0 = new Date().getTime();
   }
