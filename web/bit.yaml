@@ -1,0 +1,20 @@
+---
+name: esmbit-root
+build_ver: BW2
+builder: ESMRootBuilder
+type: in-house
+
+# These deps are typically hardcoded to one specific version,
+# used throughout the workspace (frontend modules)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+npm_packages:
+
+# Dependent libraries
+# - - - - - - - - - - - - -
+  - name: sprintf-js
+    version: "1.1.3"
+  - name: tslib
+    version: "2.8.0"
+
+dependencies:
+  bit:

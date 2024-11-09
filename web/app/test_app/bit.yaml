@@ -1,0 +1,12 @@
+---
+name: test_app
+build_ver: BW2
+builder: ESMBuilder
+type: in-house
+language: ts
+dependencies:
+  bit:
+  - stopwatch_timer
+  - jsutil
+  - fw_esm
+  - esmbit-root

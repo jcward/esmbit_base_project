@@ -1,0 +1,17 @@
+---
+name: deploy-prep
+build_ver: BW2
+builder: ShellCmdBuilder
+type: in-house
+not_skippable: true
+# No paths - the deploy step cannot be skipped. Run if anything changes.
+steps:
+  - cmd: ./scripts/gather_esm.rb
+    stdin: WIDGET_INFO
+  - cmd: ./scripts/deploy_test_cms.rb
+dependencies:
+  bit:
+  - fw_esm
+  - jsutil
+  - esmbit-root
+  - test_app

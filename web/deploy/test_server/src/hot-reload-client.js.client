@@ -1,0 +1,33 @@
+// hot-reload-client.js
+
+const socket = new WebSocket('ws://127.0.0.1:2021');
+
+socket.addEventListener('open', () => {
+  console.log('Connected to server for hot-reloading');
+});
+
+socket.addEventListener('message', async (event) => {
+  const data = JSON.parse(event.data);
+
+  if (data.type === 'css-update') {
+    const widget_name = data.widget_name;
+    const timestamp = data.timestamp;
+
+    console.log(`CSS update for widget: ${widget_name}`);
+
+    // Remove the old style element
+    const oldStyleElement = document.querySelector(`style[widget="${widget_name}"]`);
+    if (oldStyleElement) {
+      oldStyleElement.remove();
+    }
+
+    // Dynamically import the updated CSS module with cache-busting
+    try {
+      const modulePath = `/esmbit-dist/css.${widget_name}.esm.js?cb=${timestamp}`; // Adjust the path as needed
+      await import(modulePath);
+      console.log(`CSS for widget ${widget_name} updated`);
+    } catch (error) {
+      console.error(`Failed to update CSS for widget ${widget_name}:`, error);
+    }
+  }
+});

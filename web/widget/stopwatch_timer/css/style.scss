@@ -1,0 +1,14 @@
+@import '../../../constants.scss';
+
+$primary-color: #049;
+
+.stopwatch_timer {
+  display: block;
+  h2 {
+    padding: 5px;
+    color: $primary-color;
+    background-color: rgba(0,0,0,0.2);
+    margin-top: 20px;
+    margin-bottom: 0;
+  }
+}

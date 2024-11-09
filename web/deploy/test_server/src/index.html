@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    window.$importmap = {{ cms://esmbit-dist/esmbit-import-map.json }}
+  </script>
+  <!-- <script type="importmap"> must be inline, hence: -->
+  {{ cms://esmbit-dist/esmbit-import-map.html }}
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <style>
+   html, body { margin: 0 }
+   * {
+     box-sizing: border-box;
+   }
+   body input, body button, body textarea, body select {
+     font-family: inherit;
+     font-size: inherit;
+   }
+   body * { box-sizing: border-box; }
+  </style>
+
+</head>
+<body>
+</body>
+<script>
+  (function() {
+    var app = 'test_app';
+    try {
+      const search = window.location.search.replace("?", "");
+      const params_arr = search ? search.split("&") : [];
+      let params = {};
+      for (const p of params_arr) {
+        const [key, value] = p.split("=");
+        params[key] = value;
+      }
+      app = params.app || app;
+    } catch (e) { };
+
+    if (!app) {
+      document.body.innerHTML = 'No app selected.';
+    } else {
+      console.log('Launching app: '+app);
+      const script = document.createElement('script');
+      script.setAttribute('type', 'module');
+      script.setAttribute('src', '/esmbit-dist/'+app+'.js');
+      document.getElementsByTagName('head')[0].appendChild(script);
+    }
+  })();
+</script>
+<script src="hot-reload-client.js"></script>
+</html>

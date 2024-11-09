@@ -1,0 +1,23 @@
+@import '../../../constants.scss';
+
+.esmbit-app {
+  background-color: #fff;
+  position: absolute;
+  top:0;left:0;width:100%;height:100%;
+  .esmbit-app-header {
+    position: absolute;
+    top:0;
+    width:100%;
+    height: 40px;
+    padding: 10px 4px;
+    background-color: $LIGHT_TAN;
+    color: #fff;
+    font-weight: 600;
+  }
+  padding-top:40px;
+  .esmbit-page {
+    position: relative;
+    display: block;
+    padding: 15px;
+  }
+}

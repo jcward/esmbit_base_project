@@ -1,0 +1,9 @@
+---
+name: jsutil
+build_ver: BW2
+builder: ESMBuilder
+type: in-house
+language: ts
+dependencies:
+  bit:
+  - esmbit-root

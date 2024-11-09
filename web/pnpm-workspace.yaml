@@ -1,0 +1,6 @@
+packages:
+  - app/*
+  - lib/*
+  - widget/*
+  - ebo.lib/*
+  - ebo.local/*

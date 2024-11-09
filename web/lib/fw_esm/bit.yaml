@@ -1,0 +1,11 @@
+---
+name: fw_esm
+build_ver: BW2
+builder: ESMBuilder
+type: in-house
+language: ts
+css: css
+dependencies:
+  bit:
+  - esmbit-root
+  - jsutil
