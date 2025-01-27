@@ -16,4 +16,4 @@ package.lock
 pnpm-lock.yaml
 ebo.lib/
 ebo.local
-run_watchers.cjs
+run_watchers.*

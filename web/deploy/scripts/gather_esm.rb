@@ -3,6 +3,11 @@
 require 'json'
 require 'fileutils'
 
+def die msg
+  puts "ERROR: #{ msg }"
+  exit 1
+end
+  
 def write_push_build_artifacts copy_cmds
   File.open("./push_build_artifacts.sh", "w") { |f|
     copy_cmds_str = copy_cmds.join("\n    ")
@@ -109,16 +114,18 @@ widget_info.each { |widget|
   end
 }
 
-# write push_build_artifacts.sh
-write_push_build_artifacts(artifact_copy_cmds)
-
 # copy esm libs from ebo.lib
 `find ../ebo.lib/ -name esm.js | grep dist/esm.js`.split("\n").each { |esm_file|
   module_name = JSON.parse(File.read(esm_file.sub("dist/esm.js", "package.json")))["name"]
   tgt = "esmbit-dist/#{ module_name }.js"
   FileUtils.mkdir_p(File.dirname(tgt)) # Some module_names have / in them, ensure the directory structure is created
   FileUtils.cp esm_file, tgt
+  puts " cp #{ esm_file } #{ tgt }"
   module_map[module_name] = "/esmbit-dist/#{ module_name }.js" # For building the ESM importmap
+  css_file = esm_file.sub("dist/esm.js", "dist/esm.css")
+  if (File.exist?(css_file)) then # deliver to web server (but not as a module)
+    FileUtils.cp css_file, tgt.sub(/\.js/, ".css")
+  end
 }
 
 # Write an import.map.json mapping for the esmbit files
@@ -127,7 +134,7 @@ File.open("./esmbit-dist/esmbit-import-map.json", "w") { |f|
     if (imports[name] != nil) then
       raise "Conflicting local esm name with third party ESM - #{ dep["name"] }"
     end
-    imports[name] = "cms://#{ path }"
+    imports[name] = "cms://#{ path.sub(/^\//, "") }"
   }
   f.puts JSON.pretty_generate(imports)
 }
@@ -146,7 +153,14 @@ if (is_travis) then
   exit 0
 end
 
-# Deliver into wm_web/cms (leave a copy for debug inspection)
-puts "TODO: deploy files into wm_web, e.g."
-puts "rm -rf ~/dev/nimbee/edu/ruby/app/wm_web/cms/esmbit-dist"
-puts "cp -rf esmbit-dist ~/dev/nimbee/edu/ruby/app/wm_web/cms/"
+# write push_build_artifacts.sh
+write_push_build_artifacts(artifact_copy_cmds)
+
+# Ugh, I don't like to post-process here, but I have no choice at this point
+success = system("./scripts/svelte_hacks.sh")
+die "Svelte hacks failed" unless success
+
+# flowbite hack - require a .flowbite prefix rule onto all flowbite.css
+# to use on Saga Dashboard (wm web)
+success = system("./scripts/flowbite_hacks.sh")
+die "Flowbite hacks failed" unless success

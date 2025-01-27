@@ -85,7 +85,7 @@ def step1a_opt_start_api
   puts ""
   if (ans.match(/y/i)) then
     step1a1_check_local_mongo
-    File.open("/tmp/launch_api.sh", "w") { |f| f.puts "cd #{ `pwd`.chomp }/../api\nbit.js build\nNODE_ENV=test pnpm api\nbash" }
+    File.open("/tmp/launch_api.sh", "w") { |f| f.puts "cd #{ `pwd`.chomp }/../api\nbit.js build --no-progress-bar\nNODE_ENV=test pnpm api\nbash" }
     `chmod a+x /tmp/launch_api.sh`
     `gnome-terminal -- bash -l "/tmp/launch_api.sh"`
     sleep 3 # Allow build ebo.local types
@@ -98,7 +98,7 @@ def step1b_opt_full_build
   puts ""
   if (ans.match(/y/i)) then
     puts "Starting full build..."
-    result = run_command_with_live_output("cd deploy && bit.js build -f")
+    result = run_command_with_live_output("cd deploy && bit.js build -f --no-progress-bar")
     if (!result[:success]) then
       puts "The full build failed!"
       exit 1
@@ -120,84 +120,64 @@ def step2_select_watchers
       end
     end
   end
-  exit 1 if watch.length==0
+
+  if (watch.length==0) then #implies watch all
+    watch = `ls app/*/bit.yaml widget/*/bit.yaml lib/*/bit.yaml`.split("\n")
+    puts "Watching all #{ watch.length } widgets"
+  end
+
   watch
 end
 
-WATCH_SCRIPT = "./run_watchers.cjs"
+WATCH_SCRIPT = "./run_watchers.sh"
 def write_go_fast watch
   commands = watch.map { |bit_fn|
-    "cd #{ bit_fn.sub("bit.yaml", "") } && pnpx rollup -c ebo.rollup.config.js -w"
+    "cd #{ bit_fn.sub("bit.yaml", "") } && watch.rb 'pnpx rollup -c ebo.rollup.config.js' src css assets"
   }
 
   commands << "cd #{ Dir.pwd }/deploy/; ./push_build_artifacts.sh"
   commands << "cd #{ Dir.pwd }/deploy/test_server; yarn install && yarn build && yarn start"
-  commands = commands.map { |c| '"'+c+'"' }
-  File.open(WATCH_SCRIPT, 'w') { |f|
-    f.puts <<EOF
-const { fork, spawn } = require('child_process');
 
-// Array of commands to run
-const commands = [
-  #{ commands.join(",\n  ")}
-];
+  File.open(WATCH_SCRIPT, 'w') do |f|
+    f.puts <<~SCRIPT
+      #!/bin/bash
+      set -e
+   
+      # Function to handle CTRL-C
+      trap 'kill $(jobs -p) && exit' INT
+   
+      # Array of commands
+      commands=(
+    SCRIPT
 
-const children = [];
+    commands.each do |cmd|
+      f.puts "      \"#{cmd}\""
+    end
 
-// Function to start a command and manage restarts
-function startCommand(cmd, last=0, last_too_fast=false) {
-  const start_t = new Date().getTime();
-  const is_too_fast = (last>0 && start_t-last < 100);
-  if (is_too_fast && last_too_fast) {
-    console.error(`Watcher restarting too quickly... will not restart: ${ cmd }`);
-    return;
-  }
-  const child = spawn(cmd, { shell: true, stdio: 'inherit' });
-  children.push(child);
-
-  // Restart on non-zero exit
-  child.on('exit', (code) => {
-    console.warn(`Command "${cmd}" exited with code ${code}. Restarting...`);
-
-    // Remove the exited child process from the children array
-    const index = children.indexOf(child);
-    if (index > -1) children.splice(index, 1);
-
-    // Restart the command
-    startCommand(cmd, start_t, is_too_fast);
-  });
-}
-
-// Function to clean up background processes on exit
-const cleanup = () => {
-  console.log("Stopping all child processes...");
-  children.forEach(child => {
-    child.kill('SIGTERM');
-  });
-  console.log("All child processes stopped.");
-  process.exit();
-};
-
-// Trap SIGINT (CTRL-C) to run cleanup
-process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
-
-// Start each command
-commands.forEach(cmd => startCommand(cmd));
-
-// Keep the process alive to handle cleanup on CTRL-C
-setInterval(() => {}, 1000);
-EOF
-  }
+    f.puts <<~SCRIPT
+      )
+   
+      # Launch commands in the background
+      for cmd in "${commands[@]}"; do
+        echo "Starting: $cmd"
+        eval "$cmd &"
+      done
+   
+      # Wait for all background jobs
+      echo "Press CTRL-C to terminate all processes."
+      wait
+    SCRIPT
+  end
 
   `chmod a+x #{ WATCH_SCRIPT }`
+  system(WATCH_SCRIPT)
 
   # puts "#{ blue() }Wrote: #{ WATCH_SCRIPT } - you can run it with:#{ nocolor() }"
   # puts "#{ magenta() }node #{ WATCH_SCRIPT }#{ nocolor() }"
 end
 
 def run_watch_script
-  run_command_with_live_output "node #{ WATCH_SCRIPT }"
+  system(WATCH_SCRIPT)
 end
 
 def main
@@ -207,7 +187,7 @@ def main
     end
     run_watch_script()
   else
-    step1a_opt_start_api()
+    step1a_opt_start_api() if (File.exist?("../api"))
     step1b_opt_full_build()
     watch = step2_select_watchers()
     write_go_fast(watch)

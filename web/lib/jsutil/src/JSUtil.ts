@@ -1,11 +1,12 @@
 import type { DigestAlgorithm } from "./index.jsutil";
+import SHA1Hex from './SHA1';
 
 export class JSUtil
 {
-  public static async inject_css(css: string, doc ?: Document): Promise<HTMLStyleElement>
+  public static inject_css(css: string, doc ?: Document): HTMLStyleElement
   {
     if (!doc) doc = document;
-    const id = await JSUtil.calcHash(css, 'SHA-1');
+    const id = JSUtil.calc_sha1(css);
     let style:any = null;
     style = document.getElementById(id);
     if (!style) {
@@ -17,21 +18,29 @@ export class JSUtil
     return style;
   }
 
-  public static async calcHash(input: string, algorithm ?: DigestAlgorithm | undefined): Promise<string>
+  public static calc_sha1(input: string): string
+  {
+    return SHA1Hex(input);
+  }
+
+  public static async calc_crypto_sha1(input: string): Promise<string>
   {
     // Convert input string to array of bytes
     const encoder = new TextEncoder();
     const data = encoder.encode(input);
-    algorithm ||= 'SHA-1';
 
-    // Compute MD5 hash
-    const hashBuffer = await crypto.subtle.digest(algorithm, data);
+    if (crypto.subtle) {
+      // Compute MD5 hash
+      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
 
-    // Convert to hex string
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      // Convert to hex string
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    return hashHex;
+      return hashHex;
+    } else {
+      return SHA1Hex(input);
+    }
   }
 
   public static is_on_page(e:Element) {

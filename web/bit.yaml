@@ -16,5 +16,31 @@ npm_packages:
   - name: tslib
     version: "2.8.0"
 
+# Flowbite Svelte UI Component library
+# - - - - - - - - - - - - -
+  - name: flowbite
+    version: "2.5.2"
+    index: "import 'flowbite/dist/flowbite.css';"
+  - name: flowbite-svelte
+    version: "0.47.4"
+    has_svelte: true
+    index: "export { AccordionItem, Accordion, Badge, Button, ButtonGroup, Datepicker,
+                    Modal, P, Table, TableBody, TableBodyCell, TableBodyRow, TableHead,
+                    TableHeadCell, Toggle, Range 
+                  } from 'flowbite-svelte';\n
+            const link = document.createElement('link');\n
+            link.rel = 'stylesheet';\n
+            link.href = 'cms://esmbit-dist/flowbite.css';\n
+            document.head.appendChild(link);"
+
+# Standalone shared Svelte runtime
+# - - - - - - - - - - - - -
+  - name: svelte
+    version: "4.2.19"
+    index: "export * from 'svelte';\n
+            //@ts-ignore\n
+            export * as internal from 'svelte/internal';\n
+            export * from 'svelte/store';"
+
 dependencies:
   bit:

@@ -5,7 +5,6 @@ builder: ESMBuilder
 type: in-house
 language: ts
 css: ./css
-framework: svelte
 dependencies:
   bit:
   - esmbit-root

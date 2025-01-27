@@ -46,6 +46,11 @@ export class CMSTemplateMiddleware
   {
     const cmsUrlRegex = /(["'])cms:\/\/(.*?)\1/g;
     content = content.replace(cmsUrlRegex, (match, quote, cmsPath) => {
+      if (!(cmsPath.indexOf("/")==0 || cmsPath.indexOf(".")==0)) {
+        // By default - cms:// is an absolute paths (unless cms://./foo/bar)
+        // cms:/// is accepted as absolute, same as cms://
+        cmsPath = '/' + cmsPath;
+      }
       return `${quote}${cmsPath}${quote}`;
     });
     return content;
