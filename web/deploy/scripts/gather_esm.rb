@@ -1,13 +1,14 @@
 #!/usr/bin/env ruby
 
 require 'json'
+require 'yaml'
 require 'fileutils'
 
 def die msg
   puts "ERROR: #{ msg }"
   exit 1
 end
-  
+
 def write_push_build_artifacts copy_cmds
   File.open("./push_build_artifacts.sh", "w") { |f|
     copy_cmds_str = copy_cmds.join("\n    ")
@@ -43,6 +44,7 @@ end
 
 # Copy dist from all widgets into esmbit-dist
 module_map = {}
+app_metadata = []
 artifact_copy_cmds = []
 imports = {}
 imports["riot"] = "https://unpkg.com/riot@6/riot.esm.js" # tbd into ebo
@@ -67,6 +69,9 @@ widget_info.each { |widget|
       FileUtils.cp css_file, "esmbit-dist/#{ css_module_name }"
       module_map[css_module_name] = "/esmbit-dist/#{ css_module_name }"
       artifact_copy_cmds.push("cp #{ css_file } esmbit-dist/#{ css_module_name }")
+
+      css_content = File.read(css_file)
+      raise "ERROR: Uninterpolated SCSS variable in #{ css_file }" if css_content.match(/\$\w+/)
     end
 
     if (widget["language"]=="gql") then
@@ -87,6 +92,15 @@ widget_info.each { |widget|
         end
         imports[dep["name"]] = dep["url"]
       }
+    end
+
+    # handle app.metadata.yaml (required for all apps)
+    if (esm_file.include?("/app/")) then
+      app_metadata_file = File.join(widget["project_dir"], "app.metadata.yaml")
+      die "App #{ module_name } is missing its required metadata file:\n#{ app_metadata_file }\n\nMinimally:\n\n---\nroute: /foo\ntitle: Some Page\n" unless File.exist?(app_metadata_file)
+      metadata = YAML.load(File.read(app_metadata_file))
+      metadata["module"] = module_name
+      app_metadata.push(metadata)
     end
   end
 
@@ -128,6 +142,9 @@ widget_info.each { |widget|
   end
 }
 
+`cp common_head.html esmbit-dist/`
+`cp common_foot.html esmbit-dist/`
+
 # Write an import.map.json mapping for the esmbit files
 File.open("./esmbit-dist/esmbit-import-map.json", "w") { |f|
   module_map.each { |name,path|
@@ -145,13 +162,10 @@ File.open("./esmbit-dist/esmbit-import-map.html", "w") { |f|
   f.puts '</script>'
 }
 
-is_travis = false
-is_travis = true if ("#{ ENV["TRAVIS_EVENT_TYPE"] }" != "")
-is_travis = true if ("#{ ENV["TRAVIS_BUILD_DIR"] }" != "")
-if (is_travis) then
-  puts "Detected travis, not deploying to local wm_web/cms ... goodbye!"
-  exit 0
-end
+# Write app.metadata.json file
+File.open("./esmbit-dist/app.metadata.json", "w") { |f|
+  f.puts JSON.pretty_generate(app_metadata)
+}
 
 # write push_build_artifacts.sh
 write_push_build_artifacts(artifact_copy_cmds)
@@ -161,6 +175,5 @@ success = system("./scripts/svelte_hacks.sh")
 die "Svelte hacks failed" unless success
 
 # flowbite hack - require a .flowbite prefix rule onto all flowbite.css
-# to use on Saga Dashboard (wm web)
 success = system("./scripts/flowbite_hacks.sh")
 die "Flowbite hacks failed" unless success

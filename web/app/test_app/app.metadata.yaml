@@ -1,0 +1,17 @@
+---
+title: My Test App
+
+# The canonical "base" route for this app
+# - - - - - - - - - - - - - - - - - - - - -
+route: /app
+
+# This app also serves all routes under /app/.* (aka URL rewrites)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+routes:
+ - ^/app/.*
+
+# Navigating to / (or the legacy /index.html) will redirect to this app
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+redirect_from:
+ - /
+ - /index.html
