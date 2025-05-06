@@ -1,20 +1,29 @@
 @import '../../../constants.scss';
 
+$NAV_HEIGHT: 40px;
+
+body { padding: 0; margin: 0 }
+
 .esmbit-app {
+  * { box-sizing: border-box };
+  input, textarea, select, button { font-size: inherit; font-family: inherit; }
+  h1, h2, h3 { margin-top: 0; }
+  p { margin: 10px 0; }
+
   background-color: #fff;
   position: absolute;
-  top:0;left:0;width:100%;height:100%;
+  top:0;left:0;width:100%;height:calc(100% - $NAV_HEIGHT);
   .esmbit-app-header {
     position: absolute;
     top:0;
     width:100%;
-    height: 40px;
+    height: $NAV_HEIGHT;
     padding: 10px 4px;
     background-color: $LIGHT_TAN;
-    color: #fff;
+    color: $DARK_BROWN;
     font-weight: 600;
   }
-  padding-top:40px;
+  padding-top: $NAV_HEIGHT;
   .esmbit-page {
     position: relative;
     display: block;

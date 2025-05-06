@@ -1,0 +1,7 @@
+---
+name: esmbit-fast-dev
+build_ver: BW2
+builder: ESMFastDevBuilder
+type: in-house
+dependencies:
+  bit:
